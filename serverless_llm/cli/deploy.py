@@ -92,8 +92,8 @@ class DeployCommand:
         except KeyError as e:
             raise ValueError(f"Missing key in config_data: {e}")
 
-        if num_gpus < 1:
-            raise ValueError("Number of GPUs cannot be less than 1.")
+        if num_gpus < 0:
+            raise ValueError("Number of GPUs cannot be less than 0.")
         if target < 1:
             raise ValueError("Target concurrency cannot be less than 1.")
         if min_instances < 0:
