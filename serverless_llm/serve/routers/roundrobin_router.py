@@ -19,6 +19,7 @@ import asyncio
 from datetime import datetime, timezone, timedelta
 import logging
 import uuid
+import time
 from typing import Dict, Optional
 
 import ray
@@ -52,7 +53,7 @@ async def auto_scaler(
     )
 
     # Get current time in integer
-    ticks_ns = datetime.time.time_ns()
+    ticks_ns = time.time_ns()
 
     # If the last_used time is more than 10 seconds ago, then we can scale down
     if (ticks_ns - last_used) < 10000000000:
@@ -125,7 +126,7 @@ class RoundRobinRouter(SllmRouter):
 
         async with self.request_count_lock:
             self.request_count += 1
-            self.last_used = datetime.time.time_ns()
+            self.last_used = time.time_ns()
 
         instance_allocation = self.loop.create_future()
         await self.request_queue.put(instance_allocation)
