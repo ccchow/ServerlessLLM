@@ -38,7 +38,7 @@ async def auto_scaler(
     """
 
     request_count = auto_scaling_metrics.get("request_count", 0)
-    last_used = auto_scaling_metrics.get("last_used", datetime.min)
+    last_used = auto_scaling_metrics.get("last_used", 0)
 
     min_instances = auto_scaling_config.get("min_instances", 0)
     max_instances = auto_scaling_config.get("max_instances", 10)
@@ -51,11 +51,12 @@ async def auto_scaler(
         max_instances, max(min_instances, desired_instances)
     )
 
-    if datetime.now(timezone.utc) - last_used < timedelta(
-        seconds=auto_scaling_config.get("idle_seconds_before_scale_down", 60)
-    ):
-        logger.info(f"Model was last used {last_used}, keeping alive")
-        desired_instances = 1
+    # Get current time in integer
+    ticks_ns = datetime.time.time_ns()
+
+    # If the last_used time is more than 10 seconds ago, then we can scale down
+    if (ticks_ns - last_used) < 10000000000:
+        desired_instances = max(desired_instances, 1)
 
     return desired_instances
 
@@ -86,7 +87,7 @@ class RoundRobinRouter(SllmRouter):
 
         self.request_count = 0
         # Set last used to utc now
-        self.last_used = datetime.min
+        self.last_used = 0
 
         self.request_count_lock = asyncio.Lock()
 
@@ -124,7 +125,7 @@ class RoundRobinRouter(SllmRouter):
 
         async with self.request_count_lock:
             self.request_count += 1
-            self.last_used = datetime.now(timezone.utc)
+            self.last_used = datetime.time.time_ns()
 
         instance_allocation = self.loop.create_future()
         await self.request_queue.put(instance_allocation)
