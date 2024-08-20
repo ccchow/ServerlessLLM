@@ -52,7 +52,7 @@ async def auto_scaler(
     )
 
     if last_used != datetime.min and datetime.now(timezone.utc) - last_used > timedelta(
-        seconds=auto_scaling_config.get("idle_seconds_before_scale_down", 10)
+        seconds=auto_scaling_config.get("idle_seconds_before_scale_down", 60)
     ):
         logger.info(f"Model is idle since {last_used}, scaling down")
         desired_instances = 0
